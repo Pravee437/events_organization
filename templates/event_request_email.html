@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Event Approval Request</title>
+</head>
+<body>
+    <h1>Event Approval Request</h1>
+    <p>Details of the Event:</p>
+    <table border="1" cellpadding="10">
+        <tr>
+            <th>Event Name</th>
+            <td>{{ event_name }}</td>
+        </tr>
+        <tr>
+            <th>Venue Address</th>
+            <td>{{ venue_address }}</td>
+        </tr>
+        <tr>
+            <th>Event Date</th>
+            <td>{{ event_date }}</td>
+        </tr>
+        <tr>
+            <th>Audience</th>
+            <td>{{ audience }}</td>
+        </tr>
+        <tr>
+            <th>Delegates</th>
+            <td>{{ delegates }}</td>
+        </tr>
+        <tr>
+            <th>Speaker</th>
+            <td>{{ speaker }}</td>
+        </tr>
+        <tr>
+            <th>NRI</th>
+            <td>{{ nri }}</td>
+        </tr>
+    </table>
+
+    <form action="http://127.0.0.1:8000/approve-event/{{ event_id }}" method="post" style="margin-top: 20px;">
+        <input type="hidden" name="event_id" value="{{ event_id }}">
+        <button type="submit">Approve</button>
+    </form>
+
+    <form action="http://127.0.0.1:8000/reject-event/{{ event_id }}" method="post" style="margin-top: 10px;">
+        <input type="hidden" name="event_id" value="{{ event_id }}">
+        <button type="submit">Reject</button>
+    </form>
+</body>
+</html>

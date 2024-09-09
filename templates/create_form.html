@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+<form action="/submit-form" method="post">
+    <input type="hidden" name="event_id" value="{{ event_id }}">
+    <label for="name">Name:</label>
+    <input type="text" name="name" required><br>
+    <label for="email">Email:</label>
+    <input type="email" name="email" required><br>
+    <label for="phoneno">Phone Number:</label>
+    <input type="text" name="phoneno" required><br>
+    <label for="dropdown">Type:</label>
+    <select name="dropdown" required>
+        <option value="audience">Audience</option>
+        <option value="delegate">Delegate</option>
+        <option value="nri">NRI</option>
+        <option value="speaker">Speaker</option>
+    </select><br>
+    <input type="submit" value="Submit">
+</form>
+
+</body>
+</html>

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Event Detail</title>
+</head>
+<body>
+    <h2>Event Detail</h2>
+    <p><strong>Event Name:</strong> {{ event.event_name }}</p>
+    <p><strong>Venue Address:</strong> {{ event.venue_address }}</p>
+    <p><strong>Event Date:</strong> {{ event.event_date }}</p>
+    <p><strong>Audience:</strong> {{ 'Yes' if event.audience else 'No' }}</p>
+    <p><strong>Delegates:</strong> {{ 'Yes' if event.delegates else 'No' }}</p>
+    <p><strong>Speaker:</strong> {{ 'Yes' if event.speaker else 'No' }}</p>
+    <p><strong>NRI:</strong> {{ 'Yes' if event.nri else 'No' }}</p>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+</head>
+<body>
+    <h1>Welcome to the Dashboard, {{ email }}!</h1>
+    <a href="/create-event">Create Event</a>
+    <a href="/events">View All Events</a>
+    <a href="/logout">Logout</a>
+    <a href="{{ url_for('users_template') }}" class="button">Users</a>
+
+</body>
+</html>
+<!--<!DOCTYPE html>-->
+<!--<html lang="en">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--    <title>Dashboard</title>-->
+<!--    <style>-->
+<!--        .button {-->
+<!--            display: inline-block;-->
+<!--            padding: 10px 20px;-->
+<!--            background-color: #4CAF50;-->
+<!--            color: white;-->
+<!--            text-align: center;-->
+<!--            text-decoration: none;-->
+<!--            font-size: 16px;-->
+<!--            margin: 4px 2px;-->
+<!--            cursor: pointer;-->
+<!--            border: none;-->
+<!--            border-radius: 4px;-->
+<!--        }-->
+<!--    </style>-->
+<!--</head>-->
+<!--<body>-->
+<!--    <h1>Welcome to your Dashboard</h1>-->
+<!--    <p>You are logged in as: {{ email }}</p>-->
+<!--    -->
+<!--    &lt;!&ndash; Add the "Users" button here &ndash;&gt;-->
+<!--    <a href="{{ url_for('users_template') }}" class="button">Users</a>-->
+<!--    -->
+<!--    &lt;!&ndash; Add other dashboard content here &ndash;&gt;-->
+<!--    -->
+<!--    <a href="{{ url_for('logout') }}" class="button">Logout</a>-->
+<!--</body>-->
+<!--</html>-->
