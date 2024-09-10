@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Form, Request, Depends, HTTPException, BackgroundTasks, UploadFile, File
+from fastapi import FastAPI, Form, Request, Depends, HTTPException, BackgroundTasks, UploadFile, File,Path
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -28,7 +28,7 @@ import qrcode
 from io import BytesIO
 import json
 import os
-from pathlib import Path
+
 app = FastAPI()
 
 
@@ -201,6 +201,7 @@ async def login_post(
         request.session['is_restricted'] = user.is_restricted
         request.session['create_event'] = user.create_event
         request.session['create_form'] = user.create_form
+        request.session['view_registrations'] = user.view_registrations
 
         if user.is_restricted:
             response = RedirectResponse(url="/users-template", status_code=303)
@@ -285,6 +286,27 @@ async def reset_password_post(
     return templates.TemplateResponse("reset_password.html",
                                       {"request": request, "error": "Something went wrong. Please try again."})
 
+@app.get("/events", response_class=HTMLResponse)
+async def events(request: Request, db: Session = Depends(get_db)):
+    try:
+        user_email = get_current_user(request)
+        user = db.query(User).filter(User.email == user_email).first()
+
+        if not user:
+            raise HTTPException(status_code=403, detail="User not found")
+
+        events = db.query(Event).all()  # Fetch all events
+
+        return templates.TemplateResponse("events.html", {
+            "request": request,
+            "user": user,
+            "events": events,
+        })
+    except HTTPException as e:
+        if e.status_code == 403:
+            return RedirectResponse(url="/login", status_code=303)
+        else:
+            raise e
 
 @app.get("/users-template", response_class=HTMLResponse)
 @require_login
@@ -295,15 +317,16 @@ async def users_template(request: Request, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=403, detail="User not found")
 
-    events = db.query(Event).filter(Event.user_id == user.id).all()
+    events = db.query(Event).all()  # Fetch all events
 
     return templates.TemplateResponse("users_template.html", {
         "request": request,
         "user": user,
         "events": events,
-        "create_event": user.create_event or not user.is_restricted,
-        "create_form": user.create_form or not user.is_restricted,
-        "view_registration": not user.is_restricted  # Assuming view_registration is allowed for non-restricted users
+        "create_event": getattr(user, 'create_event', False),
+        "create_form": getattr(user, 'create_form', False),
+        "view_registrations":getattr(user,'view_registrations',False),
+        "can_edit_delete": user.create_event
     })
 
 @app.post("/users-template", response_class=HTMLResponse)
@@ -314,19 +337,26 @@ async def users_template_post(
     password: str = Form(...),
     create_event: bool = Form(False),
     create_form: bool = Form(False),
+    view_registrations:bool =Form(False),
     db: Session = Depends(get_db)
 ):
     try:
         user = db.query(User).filter(User.email == email).first()
         if user:
-            return templates.TemplateResponse("users_template.html", {"request": request, "error": "Email already exists"})
-
-        new_user = User(name=name, email=email, password=password, is_restricted=True, create_event=create_event, create_form=create_form)
-        db.add(new_user)
-        db.commit()
-        db.refresh(new_user)
-
-        return RedirectResponse(url="/login", status_code=303)
+            # Update the user's permissions if they already exist
+            user.create_event = create_event
+            user.create_form = create_form
+            user.view_registrations = view_registrations
+            db.commit()
+            db.refresh(user)
+            return RedirectResponse(url="/login", status_code=303)
+        else:
+            # Create a new user with the selected permissions
+            new_user = User(name=name, email=email, password=password, is_restricted=True, create_event=create_event, create_form=create_form,view_registrations=view_registrations)
+            db.add(new_user)
+            db.commit()
+            db.refresh(new_user)
+            return RedirectResponse(url="/login", status_code=303)
     except Exception as e:
         return templates.TemplateResponse("users_template.html", {"request": request, "error": "An error occurred during registration. Please try again."})
 
@@ -388,28 +418,6 @@ async def create_event_post(
 
     return RedirectResponse(url="/users-template", status_code=303)
 
-
-@app.get("/events", response_class=HTMLResponse)
-@require_login
-async def events(request: Request, db: Session = Depends(get_db)):
-    user_email = get_current_user(request)
-    user = db.query(User).filter(User.email == user_email).first()
-
-    if not user:
-        raise HTTPException(status_code=403, detail="User not found")
-
-    user_events = db.query(Event).filter(Event.user_id == user.id).all()
-
-    return templates.TemplateResponse("users_template.html", {
-        "request": request,
-        "user": user,
-        "events": user_events,
-        "create_event": request.session.get('create_event', False),
-        "create_form": request.session.get('create_form', False),
-        "view_registration": request.session.get('view_registration', False)
-    })
-
-
 @app.post("/approve-event/{event_id}")
 async def approve_event(event_id: int, db: Session = Depends(get_db)):
     pending_event = db.query(PendingEvent).filter(PendingEvent.id == event_id).first()
@@ -447,24 +455,20 @@ async def reject_event(event_id: int, db: Session = Depends(get_db)):
 
     return RedirectResponse(url="/events", status_code=303)
 
-@app.get("/edit-event", response_class=HTMLResponse)
+@app.get("/edit-event/{event_id}", response_class=HTMLResponse)
 @require_login
-async def edit_event(request: Request, db: Session = Depends(get_db)):
-    event_id = request.query_params.get("id")
-    if not event_id:
-        raise HTTPException(status_code=400, detail="Event ID is required")
-
+async def edit_event(request: Request, event_id: int, db: Session = Depends(get_db)):
     event = db.query(Event).filter(Event.id == event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
 
     return templates.TemplateResponse("edit_event.html", {"request": request, "event": event})
 
-@app.post("/edit-event", response_class=HTMLResponse)
+@app.post("/edit-event/{event_id}", response_class=HTMLResponse)
 @require_login
 async def edit_event_post(
         request: Request,
-        event_id: int = Form(...),
+        event_id: int,
         event_name: str = Form(...),
         venue_address: str = Form(...),
         event_date: str = Form(...),
@@ -533,6 +537,8 @@ async def create_form(request: Request, event_id: int, db: Session = Depends(get
 
     return templates.TemplateResponse("create_form.html", {"request": request, "event_id": event_id})
 
+import os
+
 @app.post("/submit-form")
 async def submit_form(
         request: Request,
@@ -566,12 +572,12 @@ async def submit_form(
     }
 
     # Create the directory if it doesn't exist
-    qr_code_dir = Path("static/qrcodes")
-    qr_code_dir.mkdir(parents=True, exist_ok=True)
+    qr_code_dir = "static/qrcodes"
+    os.makedirs(qr_code_dir, exist_ok=True)
 
-    qr_code_path = qr_code_dir / f"{new_form_entry.id}.png"
+    qr_code_path = os.path.join(qr_code_dir, f"{new_form_entry.id}.png")
     try:
-        generate_qr_code(user_data, str(qr_code_path))
+        generate_qr_code(user_data, qr_code_path)
 
         with open(qr_code_path, "rb") as image_file:
             qr_code_binary = image_file.read()
@@ -588,7 +594,10 @@ async def submit_form(
 @app.get("/view-registrations/{event_id}", response_class=HTMLResponse)
 @require_login
 async def view_registrations(request: Request, event_id: int, db: Session = Depends(get_db)):
-    if not request.session.get('view_registration'):
+    user_email = get_current_user(request)
+    user = db.query(User).filter(User.email == user_email).first()
+
+    if not user or not user.view_registrations:
         raise HTTPException(status_code=403, detail="Access denied")
 
     event = db.query(Event).filter(Event.id == event_id).first()
@@ -604,7 +613,12 @@ async def view_registrations(request: Request, event_id: int, db: Session = Depe
     })
 
 @app.get("/upload-image/{event_id}", response_class=HTMLResponse)
-async def upload_image_form(event_id: int, request: Request, db: Session = Depends(get_db)):
+@require_login
+async def upload_image_form(
+    request: Request,
+    event_id: int = Path(..., title="The ID of the event to upload an image for"),
+    db: Session = Depends(get_db)
+):
     event = db.query(Event).filter(Event.id == event_id).first()
 
     if not event:

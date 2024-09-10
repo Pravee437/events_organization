@@ -14,6 +14,7 @@ class User(Base):
     is_restricted = Column(Boolean, default=True)
     create_event = Column(Boolean, default=True)  # Changed default to True
     create_form = Column(Boolean, default=True)   # Changed default to True
+    view_registrations = Column(Boolean, default=False)
 
     events = relationship("Event", back_populates="owner")
     pending_events = relationship("PendingEvent", back_populates="user")
