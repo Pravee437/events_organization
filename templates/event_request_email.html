@@ -37,12 +37,12 @@
         </tr>
     </table>
 
-    <form action="http://127.0.0.1:8000/approve-event/{{ event_id }}" method="post" style="margin-top: 20px;">
+    <form action="{{ base_url }}approve-event/{{ event_id }}" method="post" style="margin-top: 20px;">
         <input type="hidden" name="event_id" value="{{ event_id }}">
         <button type="submit">Approve</button>
     </form>
 
-    <form action="http://127.0.0.1:8000/reject-event/{{ event_id }}" method="post" style="margin-top: 10px;">
+    <form action="{{ base_url }}reject-event/{{ event_id }}" method="post" style="margin-top: 10px;">
         <input type="hidden" name="event_id" value="{{ event_id }}">
         <button type="submit">Reject</button>
     </form>

@@ -8,6 +8,10 @@
 <body>
     <h1>Thank You!</h1>
     <p>Your form has been successfully submitted.</p>
-    <a href="/users-template">Return to User Dashboard</a>
+    {% if user.is_restricted %}
+        <a href="/users-template">Return to User Dashboard</a>
+    {% else %}
+        <a href="/dashboard">Return to Dashboard</a>
+    {% endif %}
 </body>
 </html>

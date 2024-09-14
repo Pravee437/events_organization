@@ -12,8 +12,8 @@ class User(Base):
     password = Column(String)
     is_active = Column(Boolean, default=True)
     is_restricted = Column(Boolean, default=True)
-    create_event = Column(Boolean, default=True)  # Changed default to True
-    create_form = Column(Boolean, default=True)   # Changed default to True
+    create_event = Column(Boolean, default=True)
+    create_form = Column(Boolean, default=True)
     view_registrations = Column(Boolean, default=False)
 
     events = relationship("Event", back_populates="owner")
@@ -51,6 +51,7 @@ class Event(Base):
 
     owner = relationship("User", back_populates="events")
     forms = relationship("EventForm", back_populates="event", cascade="all, delete-orphan")
+    image = relationship("ImageModel", back_populates="event", uselist=False, cascade="all, delete-orphan")
 
 class EventForm(Base):
     __tablename__ = "event_forms"
@@ -73,4 +74,4 @@ class ImageModel(Base):
     filename = Column(String, nullable=False)
     data = Column(LargeBinary, nullable=False)
 
-    event = relationship("Event", backref="image")
+    event = relationship("Event", back_populates="image")

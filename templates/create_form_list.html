@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Event Form</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-4">
+        <h1 class="text-2xl font-bold mb-4">Create Event Form</h1>
+
+        {% if events %}
+            <ul class="bg-white shadow-md rounded mb-4">
+            {% for event in events %}
+                <li class="border-b last:border-b-0">
+                    <a href="{{ url_for('create_form', event_id=event.id) }}" class="block px-4 py-2 hover:bg-gray-100">
+                        {{ event.event_name }} - {{ event.event_date }}
+                    </a>
+                </li>
+            {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-gray-600">You have no events.</p>
+        {% endif %}
+
+        <a href="{{ url_for('dashboard') }}" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 inline-block mt-4">Back to Dashboard</a>
+    </div>
+</body>
+</html>

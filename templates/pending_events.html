@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pending Events</title>
+</head>
+<body>
+    <h1>Pending Events</h1>
+    {% if pending_events %}
+        <ul>
+        {% for event in pending_events %}
+            <li>
+                {{ event.event_name }} - {{ event.event_date }}
+                (Status: Pending Approval)
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>You have no pending events.</p>
+    {% endif %}
+    <a href="/dashboard">Back to Dashboard</a>
+</body>
+</html>
